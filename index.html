@@ -1,110 +1,111 @@
 <!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>I miei animali Preferiti</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I miei animali Preferiti</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header>
-    <h1>I miei animali Preferiti</h1>
-  </header>
-  <main>
-    <figure>
-      <img src="https://picsum.photos/400/300" alt="Immagine Casuale">
-    </figure>
-    <div class="lista-animali"></div>
-  </main>
-  <footer>
-    <p>Creato con amore da... un collega sbadato! 🐾</p>
-  </footer>
+    <header>
+        <h1>I miei animali Preferiti</h1>
+    </header>
+    <main>
+        <figure>
+            <img src="https://picsum.photos/400/300" alt="Immagine Casuale">
+        </figure>
+        <div class="lista-animali"></div>
+    </main>
+    <footer>
+        <p>Creato con amore da... un collega sbadato! 🐾</p>
+    </footer>
 
-  <script type="text/babel">
-    const { useState } = React;
 
-    function ListaAnimali() {
-      const [animals, setAnimals] = useState([]);
-      const [query, setQuery] = useState("");
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState(null);
+    <script type="text/babel">
 
-      const searchAnimal = async () => {
-        if (!query.trim()) return;
-        setLoading(true);
-        setError(null);
+        const { useState } = React
+        const { createPortal } = ReactDOM
 
-        try {
-          const res = await fetch(`http://localhost:3333/animals?search=${query}`);
-          if (!res.ok) throw new Error("Errore di rete");
 
-          const data = await res.json();
+        function Modal({
+            title,
+            content,
+            show = false,
+            onClose = () => { },
+            onConfirm = () => { }
+        }) {
+            return show && ReactDOM.createPortal(
+                <div className="modal-container">
+                    <div className="modal">
+                        <h2>{title}</h2>
+                        {content}
+                        <div>
+                            <button onClick={onClose}>Annulla</button>
+                            <button onClick={onConfirm}>Conferma</button>
 
-          if (!data.length) {
-            setError("Nessun animale trovato");
-          } else {
-            const first = data[0];
-            const newAnimal = {
-              name: first.name || "Sconosciuto",
-              description: first.description || "Descrizione non disponibile",
-              image: first.image || "https://via.placeholder.com/200x150?text=No+Image"
-            };
-            setAnimals([...animals, newAnimal]);
-          }
-        } catch (err) {
-          setError("Errore durante la ricerca dell'animale");
-        } finally {
-          setLoading(false);
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )
         }
-      };
 
-      return (
-        <div>
-          <div style={{ marginBottom: "1rem" }}>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cerca un animale..."
-            />
-            <button onClick={searchAnimal}>Cerca</button>
-          </div>
 
-          {loading && <p>Caricamento...</p>}
-          {error && <p style={{ color: "red" }}>{error}</p>}
 
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            {animals.map((animal, index) => (
-              <div
-                key={index}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                  padding: "10px",
-                  maxWidth: "200px",
-                  textAlign: "center"
-                }}
-              >
-                <h3>{animal.name}</h3>
-                <img
-                  src={animal.image}
-                  alt={animal.name}
-                  style={{ width: "100%", borderRadius: "6px" }}
-                />
-                <p>{animal.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
+        function ListaAnimali() {
+            const animalsChoices = ["Cane", "Gatto", "Pappagallo", "Cavallo", "Panda"];
 
-    const root = ReactDOM.createRoot(document.querySelector(".lista-animali"));
-    root.render(<ListaAnimali />);
-  </script>
+            const [animals, setAnimals] = useState([]) //array inizialmente vuoto [];
+            const [animalName, setAnimalName] = useState("")
+            const [show, setShow] = useState(false)
+
+            const addAnimal = () => {
+                if (!animalName) return;
+                setAnimals(curr => [...curr, animalName])
+                setAnimalName("")
+                    setShow(false)
+
+            }
+
+            return (
+                <div>
+                    <button onClick={() => setShow(true)}>Aggiungi Animale</button>
+
+                    <details>
+                        <summary>Animali</summary>
+                        <ul>
+                            {animals.map((animal, index) => (
+                                <li key={index}>{animal}</li>
+                            ))}
+                        </ul>
+                    </details>
+                    <Modal
+                        show={show}
+                        onClose={() => setShow(false)}
+                        onConfirm={addAnimal}
+                        title="Aggiungi animale"
+                        content={
+                            <input
+                                type="text"
+                                value={animalName}
+                                onChange={e => setAnimalName(e.target.value)}
+
+                            />
+                        }
+                    />
+                </div>
+            )
+        }
+
+        const root = ReactDOM.createRoot(document.querySelector(".lista-animali"))
+        root.render(<ListaAnimali />)
+    </script>
 </body>
+
 </html>
